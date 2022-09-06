@@ -22,6 +22,7 @@ import (
 Функция должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
+// Функция проверяет является ли символ цифрой
 func isDigit(r rune) bool {
 	if _, err := strconv.Atoi(string(r)); err == nil {
 		return true
@@ -30,6 +31,7 @@ func isDigit(r rune) bool {
 	}
 }
 
+// Функция проверяет является ли символ буквой
 func isAlpha(r rune) bool {
 	if !isDigit(r) && string(r) != `\` {
 		return true
@@ -37,12 +39,14 @@ func isAlpha(r rune) bool {
 	return false
 }
 
+// Функция записывает руну ch в builder cnt раз
 func write(ch rune, b *strings.Builder, cnt int) {
 	for i := 0; i < cnt; i++ {
 		b.WriteString(string(ch))
 	}
 }
 
+// Функция распоковывает строку
 func extract(s string) (string, error) {
 	arr := []rune(s)
 
