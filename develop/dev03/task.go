@@ -217,7 +217,12 @@ func readFile(filename string) []string {
 	var rows []string
 
 	file, err := os.Open(filename)
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Fatal("Не могу закрыть файл")
+		}
+	}(file)
 
 	if err != nil {
 		log.Fatal("Не могу открыть файл ", filename)
@@ -237,7 +242,12 @@ func writeToFile(filename string, data []string) {
 	if err != nil {
 		log.Fatal("Не могу создать файл")
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			log.Fatal("Не могу закрыть файл")
+		}
+	}(f)
 
 	for i := 0; i < len(data); i++ {
 		_, err := fmt.Fprintln(f, data[i])
