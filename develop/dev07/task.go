@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -30,41 +31,27 @@ start := time.Now()
 	sig(1*time.Hour),
 	sig(1*time.Minute),
 )
-fmt.Printf(“fone after %v”, time.Since(start))
+fmt.Printf(“Done after %v”, time.Since(start))
 */
 
 // Функция объединяет несколько каналов в один
 func or(channels ...<-chan interface{}) <-chan interface{} {
-	// Крайние случаи
-	if len(channels) == 0 {
-		return nil
-	} else if len(channels) == 1 {
-		return channels[0]
+	out := make(chan interface{})
+	var wg sync.WaitGroup
+	wg.Add(len(channels))
+	for _, c := range channels {
+		go func(c <-chan interface{}) {
+			for v := range c {
+				out <- v
+			}
+			wg.Done()
+		}(c)
 	}
-
-	doneCh := make(chan interface{})
-
-	// Объединение каналов
 	go func() {
-		defer close(doneCh)
-
-		switch len(channels) {
-		case 2:
-			select {
-			case <-channels[0]:
-			case <-channels[1]:
-			}
-		default:
-			select {
-			case <-channels[0]:
-			case <-channels[1]:
-			case <-channels[2]:
-			case <-or(append(channels[3:], doneCh)...):
-			}
-		}
+		wg.Wait()
+		close(out)
 	}()
-
-	return doneCh
+	return out
 }
 
 func main() {
