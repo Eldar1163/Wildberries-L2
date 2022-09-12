@@ -35,8 +35,6 @@ fmt.Printf(“fone after %v”, time.Since(start))
 
 // Функция объединяет несколько каналов в один
 func or(channels ...<-chan interface{}) <-chan interface{} {
-	doneCh := make(chan interface{})
-
 	// Крайние случаи
 	if len(channels) == 0 {
 		return nil
@@ -44,18 +42,25 @@ func or(channels ...<-chan interface{}) <-chan interface{} {
 		return channels[0]
 	}
 
+	doneCh := make(chan interface{})
+
 	// Объединение каналов
 	go func() {
 		defer close(doneCh)
 
 		switch len(channels) {
 		case 2:
-			<-channels[0]
-			<-channels[1]
+			select {
+			case <-channels[0]:
+			case <-channels[1]:
+			}
 		default:
-			<-channels[0]
-			<-channels[1]
-			<-or(append(channels[3:], doneCh)...)
+			select {
+			case <-channels[0]:
+			case <-channels[1]:
+			case <-channels[2]:
+			case <-or(append(channels[3:], doneCh)...):
+			}
 		}
 	}()
 
@@ -81,6 +86,6 @@ func main() {
 		sig(1*time.Minute),
 	)
 
-	fmt.Printf("fone after %v", time.Since(start))
+	fmt.Printf("Done after %v", time.Since(start))
 
 }
